@@ -197,11 +197,18 @@ exports.login=async(req,res)=>{
             user.token=token;
             user.password= undefined;
             console.log("user's token is  -->",user.token);
-
+            const lastLogin = new Date(user.lastLogin).setHours(0, 0, 0, 0);
+            const today = new Date().setHours(0, 0, 0, 0);
+            if (lastLogin !== today) {
+                user.coins += 10;
+                user.lastLogin = Date.now();
+                await user.save();
+            }
             const options= {
                 expires: new Date(Date.now()+3*24*60*60*1000),
                 httpOnly:true
             }
+
             res.cookie("token",token,options).status(200).json({
                 success:true,
                 message:"Logged in sucessfully",
@@ -214,6 +221,7 @@ exports.login=async(req,res)=>{
                 message:`password is incorrect`
             })
         }
+
     } catch (error) {
         console.log(error);
         return res.status(500).json({
